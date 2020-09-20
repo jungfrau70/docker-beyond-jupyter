@@ -84,7 +84,9 @@ WORKDIR /opt/app
 #COPY app/ .
 ## For projects which are single scripts
 COPY test.py .
+COPY dic_user.txt /opt/conda/lib/python3.8/site-packages/konlpy/java/data/kE/
 
+RUN conda install -y psycopg2
 
 # Set display port and dbus env to avoid hanging
 ENV DISPLAY=:99
