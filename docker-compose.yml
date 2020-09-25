@@ -45,6 +45,7 @@ services:
       - ./config/shared_database.env
     volumes:
       - postgres_volume:/var/lib/postgresql/data/
+      #- ./pgdata/:/var/lib/postgresql/data/     
       - ./services/postgres/:/docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
@@ -56,25 +57,35 @@ services:
     env_file:
       - ./config/pgadm.env
     ports:
-      - '5555:80'
+      - '5444:80'
 
-  # # Scheduling
-  # airflow:
-  #   container_name: "beyond-jupyter_airflow"
-  #   restart: "always"
-  #   image: puckel/docker-airflow:1.9.0-2
-  #   depends_on:
-  #     - postgres
-  #   env_file:
-  #     - ./config/airflow_container.env
-  #     - ./config/minio.env
-  #     - ./config/shared_database.env
-  #   volumes:
-  #     - ./shared/requirements.txt:/requirements.txt
-  #     - ./shared/dags/:/usr/local/airflow/dags
-  #   ports:
-  #     - 8080:8080
-  #   command: webserver
+  # Scheduling
+  airflow:
+    container_name: "beyond-jupyter_airflow"
+    restart: "always"
+    image: puckel/docker-airflow:1.10.9
+    #build: services/airflow
+    user: root
+    depends_on:
+      - postgres
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=Local
+    env_file:
+      - ./config/airflow_container.env
+      - ./config/minio.env
+      - ./config/shared_database.env
+    volumes:
+      - ./shared/requirements.txt:/requirements.txt
+      - ./shared/dags/:/usr/local/airflow/dags
+    ports:
+      - 8080:8080
+    command: webserver
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   # Model Storage
   minio:
